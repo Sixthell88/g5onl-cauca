@@ -1,6 +1,6 @@
 # Core automation functions - File này sẽ được load từ GitHub raw
 
-async def send_status_update(self):
+def send_status_update():
     """Gửi update status lên Discord"""
     try:
         if self.running:
@@ -18,11 +18,14 @@ Runtime: {hours}h {minutes}m
 Method: {self.f2_method.get()}
 Admin: {'✅' if self.is_admin else '❌'}
 ```"""
-            await self.discord.send_discord_message(status_msg)
+            return asyncio.run_coroutine_threadsafe(
+                self.discord.send_discord_message(status_msg),
+                self.discord.client.loop
+            )
     except:
         pass
 
-def send_key_with_ctypes(self, key_code, scan_code=0):
+def send_key_with_ctypes(key_code, scan_code=0):
     """Gửi phím trực tiếp qua ctypes Windows API"""
     try:
         KEYEVENTF_EXTENDEDKEY = 0x0001
@@ -41,7 +44,7 @@ def send_key_with_ctypes(self, key_code, scan_code=0):
     except Exception as e:
         return False
 
-def send_key_with_win32api(self):
+def send_key_with_win32api():
     """Gửi F2 qua win32api"""
     if win32api is None or win32con is None:
         return False
@@ -60,15 +63,15 @@ def send_key_with_win32api(self):
     except Exception as e:
         return False
 
-def hold_key_advanced(self, key, hold_time):
+def hold_key_advanced(key, hold_time):
     """Giữ phím với phương pháp nâng cao"""
     method = self.f2_method.get()
     
     if method == "auto":
         methods = [
-            ("pydirectinput", lambda: self.hold_with_pydirectinput(key, hold_time)),
-            ("keyboard", lambda: self.hold_with_keyboard(key, hold_time)),
-            ("pyautogui", lambda: self.hold_with_pyautogui(key, hold_time))
+            ("pydirectinput", lambda: hold_with_pydirectinput(key, hold_time)),
+            ("keyboard", lambda: hold_with_keyboard(key, hold_time)),
+            ("pyautogui", lambda: hold_with_pyautogui(key, hold_time))
         ]
         
         for name, func in methods:
@@ -78,9 +81,9 @@ def hold_key_advanced(self, key, hold_time):
         return False
     else:
         method_map = {
-            "pydirectinput": lambda: self.hold_with_pydirectinput(key, hold_time),
-            "keyboard": lambda: self.hold_with_keyboard(key, hold_time),
-            "pyautogui": lambda: self.hold_with_pyautogui(key, hold_time)
+            "pydirectinput": lambda: hold_with_pydirectinput(key, hold_time),
+            "keyboard": lambda: hold_with_keyboard(key, hold_time),
+            "pyautogui": lambda: hold_with_pyautogui(key, hold_time)
         }
         
         if method in method_map:
@@ -89,7 +92,7 @@ def hold_key_advanced(self, key, hold_time):
     
     return False
 
-def hold_with_pydirectinput(self, key, hold_time):
+def hold_with_pydirectinput(key, hold_time):
     """Giữ phím với pydirectinput"""
     if pydirectinput is None:
         return False
@@ -101,7 +104,7 @@ def hold_with_pydirectinput(self, key, hold_time):
     except:
         return False
 
-def hold_with_keyboard(self, key, hold_time):
+def hold_with_keyboard(key, hold_time):
     """Giữ phím với keyboard"""
     if keyboard is None:
         return False
@@ -113,7 +116,7 @@ def hold_with_keyboard(self, key, hold_time):
     except:
         return False
 
-def hold_with_pyautogui(self, key, hold_time):
+def hold_with_pyautogui(key, hold_time):
     """Giữ phím với pyautogui"""
     try:
         pyautogui.keyDown(key.lower())
@@ -123,7 +126,7 @@ def hold_with_pyautogui(self, key, hold_time):
     except:
         return False
 
-def press_key_advanced(self, key):
+def press_key_advanced(key):
     """Ấn phím với phương pháp nâng cao"""
     method = self.f2_method.get()
     
@@ -154,7 +157,7 @@ def press_key_advanced(self, key):
         except:
             return False
 
-def press_f2_key(self):
+def press_f2_key():
     """Ấn phím F2 với nhiều phương pháp khác nhau"""
     try:
         method = self.f2_method.get()
@@ -163,11 +166,11 @@ def press_f2_key(self):
         
         if method == "auto":
             methods = [
-                ("pydirectinput", self.method_pydirectinput),
-                ("keyboard", self.method_keyboard),
-                ("win32api", self.method_win32api),
-                ("ctypes", self.method_ctypes),
-                ("pyautogui_multi", self.method_pyautogui_multi)
+                ("pydirectinput", method_pydirectinput),
+                ("keyboard", method_keyboard),
+                ("win32api", method_win32api),
+                ("ctypes", method_ctypes),
+                ("pyautogui_multi", method_pyautogui_multi)
             ]
             
             for name, func in methods:
@@ -178,11 +181,11 @@ def press_f2_key(self):
             return False
         else:
             method_map = {
-                "pydirectinput": self.method_pydirectinput,
-                "keyboard": self.method_keyboard,
-                "win32api": self.method_win32api,
-                "ctypes": self.method_ctypes,
-                "pyautogui": self.method_pyautogui_multi
+                "pydirectinput": method_pydirectinput,
+                "keyboard": method_keyboard,
+                "win32api": method_win32api,
+                "ctypes": method_ctypes,
+                "pyautogui": method_pyautogui_multi
             }
             
             if method in method_map:
@@ -196,7 +199,7 @@ def press_f2_key(self):
     except Exception as e:
         return False
 
-def method_pydirectinput(self):
+def method_pydirectinput():
     """Phương pháp pydirectinput"""
     if pydirectinput is None:
         return False
@@ -207,7 +210,7 @@ def method_pydirectinput(self):
     except:
         return False
 
-def method_keyboard(self):
+def method_keyboard():
     """Phương pháp keyboard"""
     if keyboard is None:
         return False
@@ -218,16 +221,16 @@ def method_keyboard(self):
     except:
         return False
 
-def method_win32api(self):
+def method_win32api():
     """Phương pháp win32api"""
-    return self.send_key_with_win32api()
+    return send_key_with_win32api()
 
-def method_ctypes(self):
+def method_ctypes():
     """Phương pháp ctypes"""
     VK_F2 = 0x71
-    return self.send_key_with_ctypes(VK_F2, 0x3C)
+    return send_key_with_ctypes(VK_F2, 0x3C)
 
-def method_pyautogui_multi(self):
+def method_pyautogui_multi():
     """Phương pháp pyautogui gửi nhiều lần"""
     try:
         for _ in range(3):
@@ -237,7 +240,7 @@ def method_pyautogui_multi(self):
     except:
         return False
 
-def handle_doivitri(self):
+def handle_doivitri():
     """Xử lý khi phát hiện doivitri.png"""
     try:
         # Send Discord notification
@@ -257,25 +260,25 @@ def handle_doivitri(self):
             self.last_hold_key = "S"
         
         # 1. Giữ phím
-        if not self.hold_key_advanced(hold_key, hold_time):
+        if not hold_key_advanced(hold_key, hold_time):
             return False
         
         time.sleep(0.5)
         
         # 2. Ấn phím 4
-        if not self.press_key_advanced('4'):
+        if not press_key_advanced('4'):
             pass
         
         time.sleep(0.5)
         
         # 3. Ấn F2
-        if not self.press_f2_key():
+        if not press_f2_key():
             return False
         
         time.sleep(1)
         
         # 4. Tìm moicau
-        moicau_pos = self.wait_and_find_image(
+        moicau_pos = wait_and_find_image(
             self.moicau_path, 
             self.moicau_search_timeout.get()
         )
@@ -288,7 +291,7 @@ def handle_doivitri(self):
         time.sleep(1)
         
         # 5. Tìm sudung
-        sudung_pos = self.wait_and_find_image(
+        sudung_pos = wait_and_find_image(
             self.sudung_path, 
             self.sudung_search_timeout.get()
         )
@@ -303,7 +306,7 @@ def handle_doivitri(self):
     except Exception as e:
         return False
 
-def find_image_on_screen(self, template_path, confidence=None):
+def find_image_on_screen(template_path, confidence=None):
     """Tìm hình ảnh trên màn hình"""
     if confidence is None:
         confidence = self.confidence_threshold.get()
@@ -348,7 +351,7 @@ def find_image_on_screen(self, template_path, confidence=None):
     except Exception:
         return None
 
-def wait_and_find_image(self, template_path, timeout_seconds):
+def wait_and_find_image(template_path, timeout_seconds):
     """Chờ và tìm hình ảnh trong khoảng thời gian nhất định"""
     image_name = os.path.basename(template_path)
     self.log_message(f"🔍 Searching for {image_name}...")
@@ -356,7 +359,7 @@ def wait_and_find_image(self, template_path, timeout_seconds):
     start_time = time.time()
     
     while self.running and (time.time() - start_time) < timeout_seconds:
-        pos = self.find_image_on_screen(template_path)
+        pos = find_image_on_screen(template_path)
         
         if pos:
             elapsed = time.time() - start_time
@@ -368,7 +371,7 @@ def wait_and_find_image(self, template_path, timeout_seconds):
     self.log_message(f"❌ {image_name} not found after {timeout_seconds}s")
     return None
 
-def press_r_sequence(self):
+def press_r_sequence():
     """Thực hiện chuỗi ấn phím R"""
     try:
         self.log_message("🎯 Starting R key sequence...")
@@ -402,36 +405,33 @@ def press_r_sequence(self):
         self.log_message(f"❌ R key sequence error: {e}")
         return False
 
-def automation_cycle(self):
+def automation_cycle():
     """Một chu kỳ automation hoàn chỉnh"""
     try:
         self.log_message(f"🚀 Starting Cycle {self.cycle_count}")
         
         # Send status update every 10 cycles
         if self.cycle_count % 10 == 0:
-            asyncio.run_coroutine_threadsafe(
-                self.send_status_update(),
-                self.discord.client.loop
-            )
+            send_status_update()
         
         # 1. Check doivitri
         if self.doivitri_path:
-            doivitri_pos = self.find_image_on_screen(self.doivitri_path)
+            doivitri_pos = find_image_on_screen(self.doivitri_path)
             
             if doivitri_pos:
                 self.log_message(f"⚠️ Doivitri detected at {doivitri_pos}")
-                if self.handle_doivitri():
+                if handle_doivitri():
                     self.log_message("✅ Doivitri handled successfully")
                 else:
                     return False
         
         # 2. Wait for cauca
-        cauca_pos = self.wait_and_find_image(self.cauca_path, 1200)
+        cauca_pos = wait_and_find_image(self.cauca_path, 1200)
         if not cauca_pos or not self.running:
             return False
         
         # 3. Press R sequence
-        if not self.press_r_sequence() or not self.running:
+        if not press_r_sequence() or not self.running:
             return False
         
         # 4. Wait before F2
@@ -444,7 +444,7 @@ def automation_cycle(self):
         
         # 5. Press F2
         self.log_message("⌨️ Pressing F2...")
-        if not self.press_f2_key():
+        if not press_f2_key():
             self.log_message("❌ F2 press failed")
             if not self.is_admin:
                 self.log_message("💡 Try running as Admin")
@@ -459,7 +459,7 @@ def automation_cycle(self):
             return False
         
         # 7. Find and click moicau
-        moicau_pos = self.wait_and_find_image(
+        moicau_pos = wait_and_find_image(
             self.moicau_path, 
             self.moicau_search_timeout.get()
         )
@@ -473,7 +473,7 @@ def automation_cycle(self):
         time.sleep(1)
         
         # 8. Find and click sudung
-        sudung_pos = self.wait_and_find_image(
+        sudung_pos = wait_and_find_image(
             self.sudung_path, 
             self.sudung_search_timeout.get()
         )
@@ -491,7 +491,7 @@ def automation_cycle(self):
         self.log_message(f"❌ Cycle error: {str(e)}")
         return False
 
-def automation_thread(self):
+def automation_thread():
     """Thread chạy automation"""
     self.cycle_count = 0
     
@@ -504,7 +504,7 @@ def automation_thread(self):
             self.root.after(0, lambda: self.cycle_label.config(
                 text=f"Cycles: {self.cycle_count} | Total: {self.total_cycles}"))
             
-            success = self.automation_cycle()
+            success = automation_cycle()
             
             if not success:
                 if self.running:
@@ -517,9 +517,9 @@ def automation_thread(self):
     except Exception as e:
         self.log_message(f"❌ Thread error: {e}")
     finally:
-        self.root.after(0, self.reset_ui_after_stop)
+        self.root.after(0, reset_ui_after_stop)
 
-def start_automation_core(self):
+def start_automation_core():
     """Bắt đầu automation - Core function"""
     # Check required images
     if not all([self.cauca_path, self.moicau_path, self.sudung_path]):
@@ -564,10 +564,10 @@ def start_automation_core(self):
     )
     
     # Start thread
-    self.thread = threading.Thread(target=self.automation_thread, daemon=True)
+    self.thread = threading.Thread(target=automation_thread, daemon=True)
     self.thread.start()
 
-def stop_automation_core(self):
+def stop_automation_core():
     """Dừng automation - Core function"""
     self.running = False
     self.log_message("🛑 Stopping automation...")
@@ -578,7 +578,7 @@ def stop_automation_core(self):
         self.discord.client.loop
     )
 
-def reset_ui_after_stop(self):
+def reset_ui_after_stop():
     """Reset UI sau khi dừng"""
     self.start_button.config(state='normal')
     self.stop_button.config(state='disabled')
